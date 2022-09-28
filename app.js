@@ -56,6 +56,28 @@ app.post('/api/v1/tours', (req, res) => {
   //we always have to send back sth in order to complete request
 });
 
+app.get('/api/v1/tours/:id', (req, res) => {
+  console.log(req.params);
+  //req.params is an object where  our all parameters are strored! => req.params => {id: 5}
+  //if you want to make a parameter optional, put a question mark in the right end side => /:x?
+  const id = req.params.id * 1;
+  const tour = tours.find((el) => el.id === id);
+
+  if (!tour) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'invalid ID',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      tour: tour,
+    },
+  });
+});
+
 const port = 3000;
 app.listen(port, () => {
   console.log(`App running on port ${port}...`);
