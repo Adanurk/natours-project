@@ -1,8 +1,12 @@
 const fs = require('fs');
 const express = require('express');
+const morgan = require('morgan');
+
 const app = express();
 //adds a bunch of functions to our app variable
 
+//! 1-MIDDLEWARES
+app.use(morgan('dev'));
 app.use(express.json());
 //!this is also a middleware
 //* with this method we make sure that the data from user will be saved in request object
@@ -27,6 +31,7 @@ const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
 );
 
+//! 2-ROUTE HANDLERS
 const getAllTours = (req, res) => {
   console.log(req.requestTime);
   res.status(200).json({
@@ -118,6 +123,8 @@ const updateTour = (req, res) => {
   });
 };
 
+//! 3-ROUTES
+
 // app.get('/api/v1/tours/:id', getOneTour);
 // app.get('/api/v1/tours', getAllTours);
 // app.post('/api/v1/tours', createTour);
@@ -132,6 +139,7 @@ app
   .patch(updateTour)
   .delete(deleteTour);
 
+//! 4-SERVER LISTENER
 const port = 3000;
 app.listen(port, () => {
   console.log(`App running on port ${port}...`);
