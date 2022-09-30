@@ -7,6 +7,7 @@ app.use(express.json());
 //!this is also a middleware
 //* with this method we make sure that the data from user will be saved in request object
 // app.use(express.urlencoded({ extended: true }));
+
 //routing
 //* to determine how an application response to certain client requests/to certain url or http methods
 
