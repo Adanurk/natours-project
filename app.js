@@ -40,7 +40,5 @@ app.use('/api/v1/users', userRouter);
 // so it is actually a middleware
 
 //! 4-SERVER LISTENER
-const port = 3000;
-app.listen(port, () => {
-  console.log(`App running on port ${port}...`);
-});
+
+module.exports = app;
