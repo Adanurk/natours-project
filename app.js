@@ -8,13 +8,16 @@ const app = express();
 //adds a bunch of functions to our app variable
 
 //! 1-MIDDLEWARES
-
-app.use(morgan('dev'));
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
 
 app.use(express.json());
 //!this is also a middleware
 //* with this method we make sure that the data from user will be saved in request object
 // app.use(express.urlencoded({ extended: true }));
+
+app.use(express.static(`${__dirname}/public`));
 
 //routing
 //* to determine how an application response to certain client requests/to certain url or http methods
