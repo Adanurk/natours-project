@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const validator = require('validator');
 
 //! Creating mongoose model ----------------------------------------------
 const tourSchema = new mongoose.Schema(
@@ -9,6 +10,9 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a name'],
       unique: true,
       trim: true,
+      maxlength: [40, 'A tour name must have less or equal then 40 characters'],
+      minlength: [10, 'A tour name must have equal or more then 10 characters'],
+      //validate: [validator.isAlpha, 'Tour name must only contain characters'],
     },
     slug: String,
     duration: {
@@ -22,14 +26,32 @@ const tourSchema = new mongoose.Schema(
     difficulty: {
       type: String,
       required: [true, 'A tour must have a difficulty'],
+      enum: {
+        values: ['easy', 'medium', 'difficult'],
+        message: 'Difficulty value is not valid',
+      },
     },
-    ratingsAverage: { type: Number, default: 4.5 },
+    ratingsAverage: {
+      type: Number,
+      default: 4.5,
+      min: [1, 'Rating must be above 1.0'],
+      max: [5, 'Rating must be below 0.1'],
+    },
     ratingsQuantity: {
       type: Number,
       default: 0,
     },
     price: { type: Number, required: [true, 'A tour must have price'] },
-    priceDiscount: Number,
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function (val) {
+          //! this keyword here only point to current doc on NEW document created!
+          return val < this.price;
+        },
+        message: 'Discount price ({VALUE}) should be below the regular price',
+      },
+    },
     summary: {
       type: String,
       trim: true,
@@ -101,6 +123,8 @@ tourSchema.pre('aggregate', function (next) {
   console.log(this.pipeline());
   next();
 });
+
+//! => validation & sanitization: never accept incoming data from user as it is, always sanitize it. Fat Model, thin controller! so in model we are doing validation.
 
 const Tour = mongoose.model('Tour', tourSchema);
 
