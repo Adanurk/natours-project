@@ -23,6 +23,7 @@ app.use(express.static(`${__dirname}/public`));
 app.use((req, res, next) => {
   //! we manipulated request object with a middleware
   req.requestTime = new Date().toISOString();
+  console.log(req.headers);
   next();
 });
 
