@@ -15,11 +15,11 @@ exports.aliasTopTours = (req, res, next) => {
 //! put => app receives entirely new updated object
 //! patch => app receives the only properties that updated in the object
 
+exports.getAllTours = factory.getAll(Tour);
 exports.getOneTour = factory.getOne(Tour, { path: 'reviews' });
 exports.createTour = factory.createOne(Tour);
 exports.updateTour = factory.updateOne(Tour);
 exports.deleteTour = factory.deleteOne(Tour);
-exports.getAllTours = factory.getAll(Tour);
 
 exports.getTourStats = catchAsync(async (req, res, next) => {
   const stats = await Tour.aggregate([

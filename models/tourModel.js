@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const validator = require('validator');
+// const validator = require('validator');
 // const User = require('./userModel');
 
-//! Creating mongoose model ----------------------------------------------
 const tourSchema = new mongoose.Schema(
   {
     name: {
@@ -47,7 +46,7 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       validate: {
         validator: function (val) {
-          //! this keyword here only point to current doc on NEW document created!
+          // this keyword here only point to current doc on NEW document created!
           return val < this.price;
         },
         message: 'Discount price ({VALUE}) should be below the regular price',
@@ -157,26 +156,33 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-tourSchema.pre('/^find/', function (next) {
+tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',
-    select: '-_v -passwordChangedAt',
+    select: 'name -_id',
+  });
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'reviews',
+    select: 'user review rating',
   });
   next();
 });
 
 tourSchema.post(/^find/, function (docs, next) {
-  console.log(`query took ${Date.now() - this.start} miliseconds`);
-  console.log(docs);
+  console.log(`query took ${Date.now() - this.start} milliseconds`);
   next();
 });
 
 //! AGGREGATION MIDDLEWARE: allow us to add hooks which run before or after aggregation happens
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  console.log(this.pipeline());
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   console.log(this.pipeline());
+//   next();
+// });
 
 //! => validation & sanitization: never accept incoming data from user as it is, always sanitize it. Fat Model, thin controller! so in model we are doing validation.
 
