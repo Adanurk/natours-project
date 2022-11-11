@@ -115,6 +115,10 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+// tourSchema.index({ price: 1 });
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
@@ -164,13 +168,13 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-tourSchema.pre(/^find/, function (next) {
-  this.populate({
-    path: 'reviews',
-    select: 'user review rating',
-  });
-  next();
-});
+// tourSchema.pre(/^find/, function (next) {
+//   this.populate({
+//     path: 'reviews',
+//     select: 'user review rating',
+//   });
+//   next();
+// });
 
 tourSchema.post(/^find/, function (docs, next) {
   console.log(`query took ${Date.now() - this.start} milliseconds`);
