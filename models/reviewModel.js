@@ -75,5 +75,15 @@ reviewSchema.post('save', function () {
   this.constructor.calcAverageRatings(this.tour);
 });
 
+reviewSchema.pre(/^findOneAnd/, async function (next) {
+  //normally with this keyword here we only have access to query not document, we are doing this in order to reach doc
+  this.r = await this.findOne();
+  console.log(r);
+});
+
+reviewSchema.post(/^findOneAnd/, async function () {
+  await this.r.constructor.calcAverageRatings(this.r.tour);
+});
+
 const Review = mongoose.model('Review', reviewSchema);
 module.exports = Review;
