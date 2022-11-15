@@ -31,8 +31,6 @@ mongoose
     console.log('DB connection successful!');
   });
 
-app.use(cors());
-
 //! Starting server-------------------------
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
