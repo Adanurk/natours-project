@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const cors = require('cors');
 
 process.on('uncaughtException', (err) => {
   console.log('UNHANDLED EXCEPTION! Shutting down...');
@@ -29,6 +30,8 @@ mongoose
   .then(() => {
     console.log('DB connection successful!');
   });
+
+app.use(cors());
 
 //! Starting server-------------------------
 const port = process.env.PORT || 3000;
