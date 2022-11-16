@@ -8,7 +8,8 @@ const handleCastErrorDB = (err) => {
 const handleDuplicateFieldsDB = (err) => {
   const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
   console.log(value);
-  const message = `Duplicate field value: ${value} . Please use another value!`;
+
+  const message = `Duplicate field value: ${value}. Please use another value!`;
   return new AppError(message, 400);
 };
 
@@ -25,34 +26,66 @@ const handleJWTExpiredError = () => {
   new AppError('Your token is expired.Please login again.', 401);
 };
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
+const sendErrorDev = (err, req, res) => {
+  // A) API
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  }
+  // B) RENDERED WEBSITE
+  console.error('ERROR 💥', err);
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: err.message,
   });
 };
 
-const sendErrorProd = (err, res) => {
-  // Operational, trusted error: send message to client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-    });
+const sendErrorProd = (err, req, res) => {
+  // A) API
+  if (req.originalUrl.startsWith('/api')) {
+    // a) Operational, trusted error: send message to client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    }
 
-    // Programming or other unknown error: don't leak error details
-  } else {
+    // b) Programming or other unknown error: don't leak error details
     // 1) Log error
     console.error('ERROR 💥', err);
-
     // 2) Send generic message
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
       message: 'Something went very wrong!',
     });
   }
+
+  // B) RENDERED WEBSITE
+
+  // a) Operational, trusted error: send message to client
+  if (err.isOperational) {
+    console.log(err);
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message,
+    });
+  }
+
+  // b) Programming or other unknown error: don't leak error details
+
+  // 1) Log error
+  console.error('ERROR 💥', err);
+
+  // 2) Send generic message
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: 'Please try again later.',
+  });
 };
 
 //! error handling middleware
@@ -64,9 +97,11 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = Object.assign(err);
+    // let error = {...err}
+    // error.message = err.message
 
     if (error.name === 'CastError') {
       error = handleCastErrorDB(error);
@@ -77,6 +112,6 @@ module.exports = (err, req, res, next) => {
     if (error.name === 'JsonWebTokenError') error = handleJWTError();
     if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
 
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 };
