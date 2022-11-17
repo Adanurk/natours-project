@@ -78,7 +78,7 @@ app.use(
 app.use((req, res, next) => {
   //! we manipulated request object with a middleware
   req.requestTime = new Date().toISOString();
-  console.log(req.cookies);
+  // console.log(req.cookies);
   next();
 });
 
