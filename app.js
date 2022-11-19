@@ -7,6 +7,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cors = require('cors');
+const compression = require('compression');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -74,6 +75,8 @@ app.use(
 
 //routing
 //* to determine how an application response to certain client requests/to certain url or http methods
+
+app.use(compression());
 
 // Test middleware
 app.use((req, res, next) => {

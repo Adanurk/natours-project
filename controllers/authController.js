@@ -46,7 +46,6 @@ exports.signup = catchAsync(async (req, res, next) => {
   // role: req.body.role,
   // }
   const url = `${req.protocol}://localhost:3000/me`;
-  console.log(url);
   await new Email(newUser, url).sendWelcome();
 
   createSendToken(newUser, 201, res);
@@ -188,8 +187,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() },
   });
-
-  console.log(user);
 
   // 2) If token has not expired and there is user, set the new password
   if (!user) {
