@@ -20,7 +20,7 @@ mongoose
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
-    // useUnifiedTopology: true,
+    useUnifiedTopology: true,
   })
   .then(() => {
     console.log('DB connection successful!');
@@ -40,3 +40,10 @@ process.on('unhandledRejection', (err) => {
     process.exit(1);
   });
 });
+
+// process.on('SIGTERM', () => {
+//   console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
+//   server.close(() => {
+//     console.log('💥 Process terminated!');
+//   });
+// });
