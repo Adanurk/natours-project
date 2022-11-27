@@ -12,7 +12,7 @@ const signToken = (id) => {
   });
 };
 
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
   const cookieOptions = {
     expires: new Date(
@@ -45,7 +45,8 @@ exports.signup = catchAsync(async (req, res, next) => {
   // passwordConfirm: req.body.passwordConfirm,
   // role: req.body.role,
   // }
-  const url = `${req.protocol}://localhost:3000/me`;
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  console.log(url);
   await new Email(newUser, url).sendWelcome();
 
   createSendToken(newUser, 201, res);
@@ -53,6 +54,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
+
   //1) check if email and password exists
   if (!email || !password) {
     return next(new AppError('Please provide email and password!, 400'));
@@ -66,8 +68,51 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   //3) if everything ok, send token to client
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
+
+// Only for rendered pages , no errors!
+exports.isLoggedIn = async (req, res, next) => {
+  if (req.cookies.jwt) {
+    try {
+      // 1) verify token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+
+      // 2) Check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return next();
+      }
+
+      //3) Check if user changed password after the JWT was issued
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      // THERE IS A LOGGED IN USER
+      res.locals.user = currentUser;
+      return next();
+    } catch (err) {
+      return next();
+    }
+  }
+  next();
+};
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    // roles is an array ["admin", "lead-guide"], role="user"
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+    next();
+  };
+};
 
 exports.logout = (req, res) => {
   res.cookie('jwt', 'loggedout', {
@@ -96,13 +141,12 @@ exports.protect = catchAsync(async (req, res, next) => {
       new AppError('You are not logged in! Please log in to get access.', 401)
     );
   }
-  //2) Verification of token
 
+  //2) Verification of token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   //console.log(decoded);
 
   //3) Check if user still exists
-
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
     return next(
@@ -111,7 +155,6 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   //4) Check if user changed password after the JWT was issued
-
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
       new AppError('User recently changed password! Please login again.', 401)
@@ -123,18 +166,6 @@ exports.protect = catchAsync(async (req, res, next) => {
   res.locals.user = currentUser;
   next();
 });
-
-exports.restrictTo = (...roles) => {
-  return (req, res, next) => {
-    // roles is an array ["admin", "lead-guide"]
-    if (!roles.includes(req.user.role)) {
-      return next(
-        new AppError('You do not have permission to perform this action', 403)
-      );
-    }
-    next();
-  };
-};
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
@@ -222,36 +253,3 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   // 4) Log user in, send JWT
   createSendToken(user, 200, res);
 });
-
-// Only for rendered pages , no errors!
-exports.isLoggedIn = async (req, res, next) => {
-  if (req.cookies.jwt) {
-    try {
-      // 1) verify token
-      const decoded = await promisify(jwt.verify)(
-        req.cookies.jwt,
-        process.env.JWT_SECRET
-      );
-
-      // 2) Check if user still exists
-
-      const currentUser = await User.findById(decoded.id);
-      if (!currentUser) {
-        return next();
-      }
-
-      //3) Check if user changed password after the JWT was issued
-
-      if (currentUser.changedPasswordAfter(decoded.iat)) {
-        return next();
-      }
-
-      // THERE IS A LOGGED IN USER
-      res.locals.user = currentUser;
-      return next();
-    } catch (err) {
-      return next();
-    }
-  }
-  next();
-};

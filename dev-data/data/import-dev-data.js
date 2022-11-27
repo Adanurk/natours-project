@@ -5,13 +5,10 @@ const Tour = require('../../models/tourModel.js');
 const Review = require('../../models/reviewModel.js');
 const User = require('../../models/userModel.js');
 
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: './../../config.env' });
 
-//console.log(process.env.DATABASE);
-const DB = process.env.DATABASE.replace(
-  '<PASSWORD>',
-  process.env.DATABASE_PASSWORD
-);
+console.log(process.env.DATABASE);
+const DB = process.env.DATABASE;
 mongoose
   .connect(DB, {
     useNewUrlParser: true,
